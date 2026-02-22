@@ -1,0 +1,48 @@
+#!/bin/bash
+set -e
+
+# if [ -z "$1" ]; then
+#     echo "Usage: $0 <cloudfront-domain>"
+#     exit 1
+# fi
+
+CLOUDFRONT_DOMAIN= "$1"
+
+echo "Updating system..."
+dnf update -y
+
+echo "Installing Apache & PHP..."
+dnf install -y httpd php8.1 php8.1-mysqlnd php8.1-cli php8.1-mbstring php8.1-xml php8.1-opcache unzip
+
+echo "Enabling Apache..."
+systemctl enable httpd
+systemctl start httpd
+
+echo "Setting secure permissions..."
+usermod -a -G apache ec2-user
+chown -R apache:apache /var/www
+find /var/www -type d -exec chmod 755 {} \;
+find /var/www -type f -exec chmod 644 {} \;
+
+cat <<EOF > /etc/httpd/conf.d/app.conf
+<VirtualHost *:80>
+    DocumentRoot /var/www/html
+
+    <Directory /var/www/html>
+        AllowOverride All
+        Require all granted
+        Options -Indexes
+    </Directory>
+
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+
+    RewriteEngine On
+    RewriteRule ^vendors/(.*)$ https://${CLOUDFRONT_DOMAIN}/vendors/\$1 [R=301,L]
+</VirtualHost>
+EOF
+
+systemctl restart httpd
+
+echo "Deployment completed."
