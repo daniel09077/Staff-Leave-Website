@@ -10,11 +10,13 @@ LOG_FILE="/var/log/deployment.log"
 PHP_VERSION="8.1"
 
 log() {
-    echo -e "[ $(date +"%Y-%m-%d %H:%M:%S") ] $1" | tee -a "$LOG_FILE"
+   echo "[ $(date) ] $1"
+   echo "[ $(date) ] $1" >> "$LOG_FILE"
 }
 
 error() {
-    echo -e "[ERROR] $1" | tee -a "$LOG_FILE"
+    echo "[ERROR] $1"
+    echo "[ERROR] $1" >> "$LOG_FILE"
     exit 1
 }
 
@@ -45,6 +47,7 @@ install_packages() {
 }
 
 configure_apache() {
+    log "Configuring Apache..."
     systemctl enable httpd >> "$LOG_FILE" 2>&1
     systemctl start httpd >> "$LOG_FILE" 2>&1
 }
@@ -57,39 +60,90 @@ clone_repository() {
 deploy_files() {
     log "Deploying PHP files only..."
 
+    # Clean web root first
+    if [ -d "$WEB_ROOT" ]; then
+        find "$WEB_ROOT" -mindepth 1 -delete
+    fi
     mkdir -p "$WEB_ROOT"
 
+    # Sync with proper filter rules
     rsync -av \
-        --delete \
-        --include="*.php" \
-        --include="*.inc" \
-        --include="*.phtml" \
-        --include="composer.json" \
-        --include="composer.lock" \
-        --include=".htaccess" \
-        --exclude="*.tf" \
-        --exclude="*.tfvars" \
-        --exclude="*.tfstate" \
-        --exclude=".terraform/" \
-        --exclude="*" \
+        --include='*/' \
+        --include='*.php' \
+        --include='*.inc' \
+        --include='*.phtml' \
+        --include='composer.json' \
+        --include='composer.lock' \
+        --include='.htaccess' \
+        --exclude='*.tf' \
+        --exclude='*.tfvars' \
+        --exclude='*.tfstate*' \
+        --exclude='.terraform/' \
+        --exclude='*.jpg' \
+        --exclude='*.jpeg' \
+        --exclude='*.png' \
+        --exclude='*.gif' \
+        --exclude='*.css' \
+        --exclude='*.js' \
+        --exclude='*.svg' \
+        --exclude='.git/' \
+        --exclude='node_modules/' \
+        --exclude='README.md' \
+        --exclude='*' \
         "$TEMP_CLONE_DIR/" "$WEB_ROOT/" >> "$LOG_FILE" 2>&1
+
+    # Count deployed files
+    PHP_COUNT=$(find "$WEB_ROOT" -name "*.php" | wc -l)
+    log "Deployed $PHP_COUNT PHP files"
 }
 
 set_permissions() {
+    log "Setting permissions..."
     chown -R apache:apache "$WEB_ROOT"
     find "$WEB_ROOT" -type d -exec chmod 755 {} \;
     find "$WEB_ROOT" -type f -exec chmod 644 {} \;
 }
 
 restart_apache() {
+    log "Restarting Apache..."
     systemctl restart httpd >> "$LOG_FILE" 2>&1
 }
 
 cleanup() {
     if [ -d "$TEMP_CLONE_DIR" ]; then
+        log "Cleaning up temporary files..."
         rm -rf "$TEMP_CLONE_DIR"
     fi
 }
+
+verify_deployment() {
+    log "Verifying deployment..."
+    
+    # Check Apache status
+    if systemctl is-active --quiet httpd; then
+        log "Apache is running"
+    else
+        error "Apache is not running"
+    fi
+
+    # Verify no Terraform files
+    TF_COUNT=$(find "$WEB_ROOT" -name "*.tf" -o -name "*.tfvars" 2>/dev/null | wc -l)
+    if [ "$TF_COUNT" -eq 0 ]; then
+        log "No Terraform files in web root"
+    else
+        log "Warning: Found $TF_COUNT Terraform files"
+    fi
+
+    # Check for PHP files
+    PHP_COUNT=$(find "$WEB_ROOT" -name "*.php" 2>/dev/null | wc -l)
+    if [ "$PHP_COUNT" -gt 0 ]; then
+        log "Found $PHP_COUNT PHP files"
+    else
+        log "Warning: No PHP files found"
+    fi
+}
+
+trap cleanup EXIT
 
 main() {
     log "Starting deployment..."
@@ -100,7 +154,7 @@ main() {
     deploy_files
     set_permissions
     restart_apache
-    cleanup
+    verify_deployment
     log "Deployment completed successfully"
 }
 
