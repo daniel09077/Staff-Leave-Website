@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "db_subnet_group" {
   name       = "staffleave-db-group"
-  subnet_ids = values(local.db_subnet_ids)
+  subnet_ids = local.db_subnet_ids
 
   tags = { Name = "Main DB Subnet Group" }
 }

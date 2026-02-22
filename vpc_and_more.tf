@@ -54,9 +54,7 @@ resource "aws_route" "public_internet_access" {
 }
 #route table association to public subnets
 resource "aws_route_table_association" "public_subnets_association" {
-
-  for_each       = local.public_subnet_ids
-  subnet_id      = each.value # ✅ one at a time
+  subnet_id      = local.public_subnet_ids # ✅ one at a time
   route_table_id = aws_route_table.public_rt.id
 }
 #create private route table
@@ -81,8 +79,7 @@ resource "aws_route" "private_internet_access" {
 }
 #association the private subnets to the natgateway
 resource "aws_route_table_association" "pri_subnet_association" {
-  for_each       = merge(local.app_subnet_ids, local.db_subnet_ids)
-  subnet_id      = each.value
+  subnet_id      = local.app_subnet_ids
   route_table_id = aws_route_table.private_rt.id
 }
 #Reserve the Static Public IP
