@@ -6,8 +6,8 @@ resource "aws_vpc" "Staff_Leave_VPC" {
 }
 #public subnet 
 resource "aws_subnet" "pub_sub" {
-  vpc_id            = aws_vpc.Staff_Leave_VPC.id
-  cidr_block        = var.cidr_blocks[1]
+  vpc_id     = aws_vpc.Staff_Leave_VPC.id
+  cidr_block = var.cidr_blocks[1]
 
   tags = {
     Name = "pub_sub"

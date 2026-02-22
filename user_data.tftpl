@@ -1,48 +1,107 @@
 #!/bin/bash
 set -e
+set -u
 
-# if [ -z "$1" ]; then
-#     echo "Usage: $0 <cloudfront-domain>"
-#     exit 1
-# fi
+REPO_URL="${REPO_URL:-https://github.com/daniel09077/Staff-Leave-Website.git}"
+REPO_BRANCH="${REPO_BRANCH:-main}"
+WEB_ROOT="/var/www/html"
+TEMP_CLONE_DIR="/tmp/app_deploy_$(date +%s)"
+LOG_FILE="/var/log/deployment.log"
+PHP_VERSION="8.1"
 
-CLOUDFRONT_DOMAIN= "$1"
+log() {
+    echo -e "[ $(date +"%Y-%m-%d %H:%M:%S") ] $1" | tee -a "$LOG_FILE"
+}
 
-echo "Updating system..."
-dnf update -y
+error() {
+    echo -e "[ERROR] $1" | tee -a "$LOG_FILE"
+    exit 1
+}
 
-echo "Installing Apache & PHP..."
-dnf install -y httpd php8.1 php8.1-mysqlnd php8.1-cli php8.1-mbstring php8.1-xml php8.1-opcache unzip
+check_root() {
+    if [ "$EUID" -ne 0 ]; then
+        error "Please run as root or with sudo"
+    fi
+}
 
-echo "Enabling Apache..."
-systemctl enable httpd
-systemctl start httpd
+install_packages() {
+    log "Updating system..."
+    dnf update -y >> "$LOG_FILE" 2>&1
 
-echo "Setting secure permissions..."
-usermod -a -G apache ec2-user
-chown -R apache:apache /var/www
-find /var/www -type d -exec chmod 755 {} \;
-find /var/www -type f -exec chmod 644 {} \;
+    log "Installing Apache, PHP, and dependencies..."
+    dnf install -y \
+        httpd \
+        php${PHP_VERSION} \
+        php${PHP_VERSION}-mysqlnd \
+        php${PHP_VERSION}-cli \
+        php${PHP_VERSION}-mbstring \
+        php${PHP_VERSION}-xml \
+        php${PHP_VERSION}-opcache \
+        php${PHP_VERSION}-json \
+        git \
+        rsync \
+        unzip \
+        curl >> "$LOG_FILE" 2>&1
+}
 
-cat <<EOF > /etc/httpd/conf.d/app.conf
-<VirtualHost *:80>
-    DocumentRoot /var/www/html
+configure_apache() {
+    systemctl enable httpd >> "$LOG_FILE" 2>&1
+    systemctl start httpd >> "$LOG_FILE" 2>&1
+}
 
-    <Directory /var/www/html>
-        AllowOverride All
-        Require all granted
-        Options -Indexes
-    </Directory>
+clone_repository() {
+    log "Cloning repository..."
+    git clone -b "$REPO_BRANCH" "$REPO_URL" "$TEMP_CLONE_DIR" >> "$LOG_FILE" 2>&1
+}
 
-    Header always set X-Content-Type-Options nosniff
-    Header always set X-Frame-Options DENY
-    Header always set X-XSS-Protection "1; mode=block"
+deploy_files() {
+    log "Deploying PHP files only..."
 
-    RewriteEngine On
-    RewriteRule ^vendors/(.*)$ https://${CLOUDFRONT_DOMAIN}/vendors/\$1 [R=301,L]
-</VirtualHost>
-EOF
+    mkdir -p "$WEB_ROOT"
 
-systemctl restart httpd
+    rsync -av \
+        --delete \
+        --include="*.php" \
+        --include="*.inc" \
+        --include="*.phtml" \
+        --include="composer.json" \
+        --include="composer.lock" \
+        --include=".htaccess" \
+        --exclude="*.tf" \
+        --exclude="*.tfvars" \
+        --exclude="*.tfstate" \
+        --exclude=".terraform/" \
+        --exclude="*" \
+        "$TEMP_CLONE_DIR/" "$WEB_ROOT/" >> "$LOG_FILE" 2>&1
+}
 
-echo "Deployment completed."
+set_permissions() {
+    chown -R apache:apache "$WEB_ROOT"
+    find "$WEB_ROOT" -type d -exec chmod 755 {} \;
+    find "$WEB_ROOT" -type f -exec chmod 644 {} \;
+}
+
+restart_apache() {
+    systemctl restart httpd >> "$LOG_FILE" 2>&1
+}
+
+cleanup() {
+    if [ -d "$TEMP_CLONE_DIR" ]; then
+        rm -rf "$TEMP_CLONE_DIR"
+    fi
+}
+
+main() {
+    log "Starting deployment..."
+    check_root
+    install_packages
+    configure_apache
+    clone_repository
+    deploy_files
+    set_permissions
+    restart_apache
+    cleanup
+    log "Deployment completed successfully"
+}
+
+main "$@"

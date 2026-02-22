@@ -1,17 +1,17 @@
 locals {
   public_subnet_ids = {
     pub_az1 = aws_subnet.pub_sub.id
-    
+
   }
   # Map of Web Server subnets
   app_subnet_ids = {
     web_1 = aws_subnet.app_sub.id
-    
+
   }
 
   # Map of Database subnets
   db_subnet_ids = {
-    db_primary   = aws_subnet.db_sub.id
+    db_primary = aws_subnet.db_sub.id
   }
 }
 
