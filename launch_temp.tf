@@ -8,7 +8,7 @@ resource "aws_launch_template" "web_server_LT" {
     security_groups             = [aws_security_group.alb_sg.id]
   }
 
-  user_data = base64encode(templatefile("${path.module}/user_data.tftpl", {
+  user_data = base64encode(file("${path.module}/user_data.tftpl", {
     cloudfront_domain = aws_cloudfront_distribution.main.domain_name
   }))
 
