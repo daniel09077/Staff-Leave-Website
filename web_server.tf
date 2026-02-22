@@ -1,5 +1,4 @@
 resource "aws_instance" "web_server" {
-  count           = 2 # Create TWO servers
   ami             = var.ami
   instance_type   = var.instance_type
   security_groups = [aws_security_group.alb_sg.id]
@@ -15,6 +14,6 @@ resource "aws_instance" "web_server" {
   })
 
   tags = {
-    Name = "Web-Server-${count.index + 1}"
+    Name = "Web-Server"
   }
 }
