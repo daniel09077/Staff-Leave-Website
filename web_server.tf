@@ -4,7 +4,7 @@ resource "aws_instance" "web_server" {
   instance_type   = var.instance_type
   security_groups = [aws_security_group.alb_sg.id]
   # This picks subnet [0] for the first server and [1] for the second
-  subnet_id = values(local.public_subnet_ids)[count.index]
+  subnet_id = local.public_subnet_ids
 
   user_data = templatefile("${path.module}/user_data.tftpl", {
     db_endpoint       = aws_db_instance.mysql.address
