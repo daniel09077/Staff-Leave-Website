@@ -1,14 +1,14 @@
 locals {
   public_subnet_ids = aws_subnet.pub_sub.id
-  
-  # Map of Web Server subnets
-  app_subnet_ids  = aws_subnet.app_sub.id
 
-  
+  # Map of Web Server subnets
+  app_subnet_ids = aws_subnet.app_sub.id
+
+
 
   # Map of Database subnets
   db_subnet_ids = aws_subnet.db_sub.id
-  
+
 }
 
 variable "project_name" {
