@@ -4,33 +4,60 @@ resource "aws_vpc" "Staff_Leave_VPC" {
     Name = "Staff_Leave_VPC"
   }
 }
-#public subnet 
-resource "aws_subnet" "pub_sub" {
+#public subnet az 1 
+resource "aws_subnet" "pub_sub_az1" {
   vpc_id            = aws_vpc.Staff_Leave_VPC.id
   cidr_block        = var.cidr_blocks[1]
 
   tags = {
-    Name = "pub_sub"
+    Name = "pub_sub_az1"
   }
 }
 
-#private subnet 2 (Hosts the Application webserver)
-resource "aws_subnet" "app_sub" {
+#public subnet az2
+resource "aws_subnet" "pub_sub_az2" {
+  vpc_id            = aws_vpc.Staff_Leave_VPC.id
+  cidr_block        = var.cidr_blocks[2]
+
+  tags = {
+    Name = "pub_sub_az2"
+  }
+}
+
+#private subnet 1 (Hosts the Application webserver)
+resource "aws_subnet" "app_sub_az1" {
   vpc_id            = aws_vpc.Staff_Leave_VPC.id
   cidr_block        = var.cidr_blocks[3]
   availability_zone = var.avail_zone[0]
   tags = {
-    Name = "app_sub"
+    Name = "app_sub_az1"
+  }
+}
+#private subnet 2 (Hosts the Application webserver)
+resource "aws_subnet" "app_sub_az2" {
+  vpc_id            = aws_vpc.Staff_Leave_VPC.id
+  cidr_block        = var.cidr_blocks[4]
+  availability_zone = var.avail_zone[1]
+  tags = {
+    Name = "app_sub_az2"
   }
 }
 
 #private subnet 3 (Hosts the RDS server)
-resource "aws_subnet" "db_sub" {
+resource "aws_subnet" "db_sub_az1" {
   vpc_id            = aws_vpc.Staff_Leave_VPC.id
   cidr_block        = var.cidr_blocks[5]
   availability_zone = var.avail_zone[0]
   tags = {
-    Name = "db_sub"
+    Name = "db_sub_az1"
+  }
+}
+resource "aws_subnet" "db_sub_az2" {
+  vpc_id            = aws_vpc.Staff_Leave_VPC.id
+  cidr_block        = var.cidr_blocks[6]
+  availability_zone = var.avail_zone[1]
+  tags = {
+    Name = "db_sub_az2"
   }
 }
 #create internet gateway
@@ -54,8 +81,7 @@ resource "aws_route" "public_internet_access" {
 }
 #route table association to public subnets
 resource "aws_route_table_association" "public_subnets_association" {
-
-  for_each       = local.public_subnet_ids
+  for_each       = values(local.public_subnet_ids)
   subnet_id      = each.value # ✅ one at a time
   route_table_id = aws_route_table.public_rt.id
 }
