@@ -6,8 +6,8 @@ resource "aws_vpc" "Staff_Leave_VPC" {
 }
 #public subnet az 1 
 resource "aws_subnet" "pub_sub_az1" {
-  vpc_id            = aws_vpc.Staff_Leave_VPC.id
-  cidr_block        = var.cidr_blocks[1]
+  vpc_id     = aws_vpc.Staff_Leave_VPC.id
+  cidr_block = var.cidr_blocks[1]
 
   tags = {
     Name = "pub_sub_az1"
@@ -16,8 +16,8 @@ resource "aws_subnet" "pub_sub_az1" {
 
 #public subnet az2
 resource "aws_subnet" "pub_sub_az2" {
-  vpc_id            = aws_vpc.Staff_Leave_VPC.id
-  cidr_block        = var.cidr_blocks[2]
+  vpc_id     = aws_vpc.Staff_Leave_VPC.id
+  cidr_block = var.cidr_blocks[2]
 
   tags = {
     Name = "pub_sub_az2"
@@ -93,7 +93,9 @@ resource "aws_route_table" "private_rt" {
 resource "aws_nat_gateway" "SLV_NATGW" {
   # Use for_each to turn the tuple into individual resources
   allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.pub_sub.id
+  for_each      = values(local.public_subnet_ids)
+  subnet_id     = each.value # ✅ one at a time
+  #subnet_id     = aws_subnet.pub_sub_az1.id
 
   # To ensure proper ordering, it is recommended to add an explicit dependency
   # on the Internet Gateway for the VPC.
