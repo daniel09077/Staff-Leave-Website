@@ -12,14 +12,6 @@ resource "aws_security_group" "web_sg" {
     security_groups = [aws_security_group.alb_sg.id]
   }
 
-  # (Optional) Allow SSH only from your IP (NOT 0.0.0.0/0)
-  ingress {
-    description = "SSH from admin IP"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["105.112.238.157/32"]
-  }
 
   # Allow outbound traffic (needed for yum, S3, etc.)
   egress {
