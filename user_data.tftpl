@@ -44,7 +44,7 @@ rm -rf /var/www/html/*
 # Ensure your EC2 has an IAM role or the repo is public
 git clone -b arch-fix https://github.com/daniel09077/Staff-Leave-Website.git /tmp/app
 cp -r /tmp/app/* /var/www/html/
-rm -rf /tmp/app
+cp -r /var/www/html/Staff-Leave-Website/* /var/www/html/ 
 
 echo "--- 4. Setting Permissions ---"
 usermod -a -G apache ec2-user
