@@ -27,7 +27,7 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 resource "aws_cloudfront_distribution" "main" {
   enabled         = true
   is_ipv6_enabled = true
-web_acl_id      = aws_wafv2_web_acl.cloudfront_waf.arn
+  web_acl_id      = aws_wafv2_web_acl.cloudfront_waf.arn
   # NOTE: CloudFront cannot EXECUTE PHP.
   # It fetches index.php from EC2/ALB which runs it.
   # This only applies to direct root "/" requests.

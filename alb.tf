@@ -56,7 +56,7 @@ resource "aws_lb_listener" "ALB-listner" {
   certificate_arn   = aws_acm_certificate.SLV_cert.arn
 
   default_action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = aws_lb_target_group.SLV-tg.arn
   }
 }

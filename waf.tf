@@ -1,7 +1,7 @@
 resource "aws_wafv2_web_acl" "cloudfront_waf" {
-  name     = "staff-leave-waf"
-  scope    = "CLOUDFRONT" # Essential for CloudFront
-  provider = aws.us_east_1    # Ensure you have a provider alias for us-east-1
+  name  = "staff-leave-waf"
+  scope = "CLOUDFRONT" # Essential for CloudFront
+  #ure you have a provider alias for us-east-1
 
   default_action {
     allow {}

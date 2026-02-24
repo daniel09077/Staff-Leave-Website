@@ -1,4 +1,4 @@
-resource "aws_security_group" "app_sg" {
+resource "aws_security_group" "web_sg" {
   name        = "app-ec2-sg"
   description = "Allow traffic only from ALB"
   vpc_id      = aws_vpc.Staff_Leave_VPC.id
