@@ -81,8 +81,11 @@ resource "aws_route" "public_internet_access" {
 }
 #route table association to public subnets
 resource "aws_route_table_association" "public_subnets_association" {
-  for_each       = toset(local.public_subnet_ids)
-  subnet_id      = each.value # ✅ one at a time
+  for_each = {
+    pub_az1 = aws_subnet.pub_sub_az1.id
+    pub_az2 = aws_subnet.pub_sub_az2.id
+  }
+  subnet_id      = each.value
   route_table_id = aws_route_table.public_rt.id
 }
 #create private route table
@@ -93,8 +96,11 @@ resource "aws_route_table" "private_rt" {
 resource "aws_nat_gateway" "SLV_NATGW" {
   # Use for_each to turn the tuple into individual resources
   allocation_id = aws_eip.nat.id
-  for_each      = toset(local.public_subnet_ids)
-  subnet_id     = each.value # ✅ one at a time
+  subnet_id     = aws_subnet.pub_sub_az1.id # single public subnet
+
+
+
+  tags = { Name = "SLV-NATGW" } # choose ONE public subnet
   #subnet_id     = aws_subnet.pub_sub_az1.id
 
   # To ensure proper ordering, it is recommended to add an explicit dependency
@@ -103,9 +109,11 @@ resource "aws_nat_gateway" "SLV_NATGW" {
 }
 #specify route to the Natgateway
 resource "aws_route" "private_internet_access" {
+
   route_table_id         = aws_route_table.private_rt.id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.SLV_NATGW.id
+
 }
 #association the private subnets to the natgateway
 resource "aws_route_table_association" "pri_subnet_association" {

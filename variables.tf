@@ -1,20 +1,19 @@
 locals {
-  public_subnet_ids = [
-    aws_subnet.pub_sub_az1.id,
-    aws_subnet.pub_sub_az2.id
-  ]
+  public_subnet_ids = {
+    az1 = aws_subnet.pub_sub_az1.id
+    az2 = aws_subnet.pub_sub_az2.id
+  }
   # Map of Web Server subnets
-  app_subnet_ids = [
-    aws_subnet.app_sub_az1.id,
-    aws_subnet.app_sub_az2.id
-  ]
+  app_subnet_ids = {
+    az1 = aws_subnet.app_sub_az1.id
+    az2 = aws_subnet.app_sub_az2.id
+  }
 
   # Map of Database subnets
-  db_subnet_ids = [
-    aws_subnet.db_sub_az1.id,
-    aws_subnet.db_sub_az2.id
-  ]
-
+  db_subnet_ids = {
+    az1 = aws_subnet.db_sub_az1.id
+    az2 = aws_subnet.db_sub_az2.id
+  }
 }
 
 
