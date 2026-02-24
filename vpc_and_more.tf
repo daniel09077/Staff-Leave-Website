@@ -81,7 +81,7 @@ resource "aws_route" "public_internet_access" {
 }
 #route table association to public subnets
 resource "aws_route_table_association" "public_subnets_association" {
-  for_each       = values(local.public_subnet_ids)
+  for_each       = toset(local.public_subnet_ids)
   subnet_id      = each.value # ✅ one at a time
   route_table_id = aws_route_table.public_rt.id
 }
@@ -93,7 +93,7 @@ resource "aws_route_table" "private_rt" {
 resource "aws_nat_gateway" "SLV_NATGW" {
   # Use for_each to turn the tuple into individual resources
   allocation_id = aws_eip.nat.id
-  for_each      = values(local.public_subnet_ids)
+  for_each      = toset(local.public_subnet_ids)
   subnet_id     = each.value # ✅ one at a time
   #subnet_id     = aws_subnet.pub_sub_az1.id
 

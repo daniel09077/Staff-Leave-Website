@@ -1,21 +1,22 @@
 locals {
-  public_subnet_ids = {
-    pub_az1 = aws_subnet.pub_sub_az1.id
-    pub_az2 = aws_subnet.pub_sub_az2.id
-
-  }
+  public_subnet_ids = [
+    aws_subnet.pub_sub_az1.id,
+    aws_subnet.pub_sub_az2.id
+  ]
   # Map of Web Server subnets
-  app_subnet_ids = {
-    web_1 = aws_subnet.app_sub_az1.id
-    web_2 = aws_subnet.app_sub_az2.id
-  }
+  app_subnet_ids = [
+    aws_subnet.app_sub_az1.id,
+    aws_subnet.app_sub_az2.id
+  ]
 
   # Map of Database subnets
-  db_subnet_ids = {
-    db_primary   = aws_subnet.db_sub_az1.id
-    db_secondary = aws_subnet.db_sub_az2.id
-  }
+  db_subnet_ids = [
+    aws_subnet.db_sub_az1.id,
+    aws_subnet.db_sub_az2.id
+  ]
+
 }
+
 
 variable "project_name" {
   default = "Staff Leave System"
