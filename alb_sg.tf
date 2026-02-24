@@ -7,12 +7,12 @@ resource "aws_security_group" "alb_sg" {
   vpc_id = aws_vpc.Staff_Leave_VPC.id
 
   # Only allow traffic from CloudFront IPs
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
-  }
+  # ingress {
+  #   from_port       = 80
+  #   to_port         = 80
+  #   protocol        = "tcp"
+  #   prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
+  # }
 
   ingress {
     from_port       = 443
