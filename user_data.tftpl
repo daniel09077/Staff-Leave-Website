@@ -1,48 +1,60 @@
-# #!/bin/bash
-# set -e
+#!/bin/bash
+set -e
 
-# # if [ -z "$1" ]; then
-# #     echo "Usage: $0 <cloudfront-domain>"
-# #     exit 1
-# # fi
+# These variables are injected by Terraform via templatefile()
+CLOUDFRONT_DOMAIN="${cloudfront_domain}"
+DB_HOST="${db_host}"
 
-# CLOUDFRONT_DOMAIN= "$1"
+echo "--- 1. System Updates & Dependencies ---"
+dnf update -y
+dnf install -y httpd php8.1 php8.1-mysqlnd php8.1-cli php8.1-mbstring php8.1-xml php8.1-opcache unzip git
 
-# echo "Updating system..."
-# dnf update -y
+echo "--- 2. Web Server Configuration ---"
+systemctl enable httpd
+systemctl start httpd
 
-# echo "Installing Apache & PHP..."
-# dnf install -y httpd php8.1 php8.1-mysqlnd php8.1-cli php8.1-mbstring php8.1-xml php8.1-opcache unzip
+# Create the Apache config to handle the PHP-to-S3/CloudFront handoff
+cat <<EOF > /etc/httpd/conf.d/app.conf
+<VirtualHost *:80>
+    DocumentRoot /var/www/html
 
-# echo "Enabling Apache..."
-# systemctl enable httpd
-# systemctl start httpd
+    <Directory /var/www/html>
+        AllowOverride All
+        Require all granted
+        Options -Indexes
+    </Directory>
 
-# echo "Setting secure permissions..."
-# usermod -a -G apache ec2-user
-# chown -R apache:apache /var/www
-# find /var/www -type d -exec chmod 755 {} \;
-# find /var/www -type f -exec chmod 644 {} \;
+    # Security Headers
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
 
-# cat <<EOF > /etc/httpd/conf.d/app.conf
-# <VirtualHost *:80>
-#     DocumentRoot /var/www/html
+    # REDIRECT: Send all 'vendors' requests to CloudFront/S3
+    # This prevents the PHP server from wasting resources on static files
+    RewriteEngine On
+    RewriteRule ^vendors/(.*)$ https://\${CLOUDFRONT_DOMAIN}/vendors/\$1 [R=301,L]
+</VirtualHost>
+EOF
 
-#     <Directory /var/www/html>
-#         AllowOverride All
-#         Require all granted
-#         Options -Indexes
-#     </Directory>
+echo "--- 3. Deploying PHP Application ---"
+# Clear default Apache files
+rm -rf /var/www/html/*
 
-#     Header always set X-Content-Type-Options nosniff
-#     Header always set X-Frame-Options DENY
-#     Header always set X-XSS-Protection "1; mode=block"
+# Clone your specific repository
+# Ensure your EC2 has an IAM role or the repo is public
+git clone https:///tmp/app
+cp -r /tmp/app/* /var/www/html/
+rm -rf /tmp/app
 
-#     RewriteEngine On
-#     RewriteRule ^vendors/(.*)$ https://${CLOUDFRONT_DOMAIN}/vendors/\$1 [R=301,L]
-# </VirtualHost>
-# EOF
+echo "--- 4. Setting Permissions ---"
+usermod -a -G apache ec2-user
+chown -R apache:apache /var/www/html
+find /var/www/html -type d -exec chmod 755 {} \;
+find /var/www/html -type f -exec chmod 644 {} \;
 
-# systemctl restart httpd
+echo "--- 5. Finalizing Environment ---"
+# Optional: Inject DB Host into your PHP config if you use a .env or config file
+# sed -i "s/localhost/\${DB_HOST}/g" /var/www/html/config.php
 
-# echo "Deployment completed."
+systemctl restart httpd
+echo "Deployment completed successfully."
