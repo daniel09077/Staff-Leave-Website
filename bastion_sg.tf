@@ -5,11 +5,11 @@ resource "aws_security_group" "bastion_sg" {
 
   # Allow HTTP from my IP only 
   ingress {
-    description     = "HTTP from my IP"
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    cidr_blocks     = ["105.117.8.226"]
+    description = "HTTP from my IP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["105.117.8.226/32"]
   }
 
 
