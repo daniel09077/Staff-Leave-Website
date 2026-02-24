@@ -8,7 +8,7 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
-
+*.pem
 # Variables / secrets
 *.tfvars
 *.tfvars.json

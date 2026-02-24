@@ -6,6 +6,7 @@ resource "aws_instance" "bastion_servers" {
   # This picks subnet [0] for the first server and [1] for the second
   subnet_id = values(local.public_subnet_ids)[count.index]
   key_name  = aws_key_pair.generated_key.key_name
+  associate_public_ip_address = true
   tags = {
     Name = "Bastion-Server-${count.index + 1}"
   }
