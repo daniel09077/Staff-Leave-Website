@@ -12,10 +12,10 @@ output "alb_dns_name" {
   value       = aws_lb.SLV_alb.dns_name
 }
 
-output "ssh_connection_string" {
-  description = "Copy-paste this command to SSH into your primary web server"
-  value       = "ssh -i ${local_sensitive_file.private_key_pem.filename} ec2-user@${aws_instance.web_server[0].public_ip}"
-}
+# output "ssh_connection_string" {
+#   description = "Copy-paste this command to SSH into your primary web server"
+#   value       = "ssh -i ${local_sensitive_file.private_key_pem.filename} ec2-user@${aws_instance.web_server[0].public_ip}"
+# }
 
 
 output "rds_endpoint" {
