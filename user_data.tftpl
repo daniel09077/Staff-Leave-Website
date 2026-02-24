@@ -42,7 +42,7 @@ rm -rf /var/www/html/*
 
 # Clone your specific repository
 # Ensure your EC2 has an IAM role or the repo is public
-git clone https:///tmp/app
+git clone -b arch-fix https://github.com/daniel09077/Staff-Leave-Website.git
 cp -r /tmp/app/* /var/www/html/
 rm -rf /tmp/app
 
