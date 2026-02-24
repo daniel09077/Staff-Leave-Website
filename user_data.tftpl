@@ -32,7 +32,7 @@ cat <<EOF > /etc/httpd/conf.d/app.conf
     # REDIRECT: Send all 'vendors' requests to CloudFront/S3
     # This prevents the PHP server from wasting resources on static files
     RewriteEngine On
-    RewriteRule ^vendors/(.*)$ https://\${CLOUDFRONT_DOMAIN}/vendors/\$1 [R=301,L]
+    RewriteRule ^vendors/(.*)$ https://\$${CLOUDFRONT_DOMAIN}/vendors/\$1 [R=301,L]
 </VirtualHost>
 EOF
 
@@ -42,7 +42,7 @@ rm -rf /var/www/html/*
 
 # Clone your specific repository
 # Ensure your EC2 has an IAM role or the repo is public
-git clone -b arch-fix https://github.com/daniel09077/Staff-Leave-Website.git
+git clone -b arch-fix https://github.com/daniel09077/Staff-Leave-Website.git /tmp/app
 cp -r /tmp/app/* /var/www/html/
 rm -rf /tmp/app
 
@@ -54,7 +54,7 @@ find /var/www/html -type f -exec chmod 644 {} \;
 
 echo "--- 5. Finalizing Environment ---"
 # Optional: Inject DB Host into your PHP config if you use a .env or config file
-# sed -i "s/localhost/\${DB_HOST}/g" /var/www/html/config.php
+ #sed -i "s/localhost/\$${DB_HOST}/g" /var/www/html/config.php
 
 systemctl restart httpd
 echo "Deployment completed successfully."
