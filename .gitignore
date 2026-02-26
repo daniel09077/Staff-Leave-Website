@@ -13,7 +13,8 @@ override.tf.json
 *.tfvars
 *.tfvars.json
 .env
-
+.jpg
+.png
 # Python
 __pycache__/
 *.pyc
